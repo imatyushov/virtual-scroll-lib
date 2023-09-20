@@ -1,5 +1,4 @@
 import React, {useLayoutEffect, useMemo, useRef, useState} from 'react';
-import {logDOM} from "@testing-library/react";
 /*
 Фичи:
 - только горизонтальная виртуализация
