@@ -1,11 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import {Simple} from "./App";
+import {Scroll} from "./Scroll";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-   <Simple/>
+     <Scroll/>
   </React.StrictMode>
 );
 
