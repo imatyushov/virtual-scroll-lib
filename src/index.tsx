@@ -1,5 +1,5 @@
 import ReactDOM from 'react-dom/client';
-import VirtualScroll from "./VirtualScroll";
+import VirtualScroll from "./fixedSizeElementsScroll/VirtualScroll";
 
 
 const root = ReactDOM.createRoot(document.getElementById('root') as Element);
