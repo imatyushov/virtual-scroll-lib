@@ -1,6 +1,6 @@
 import {useEffect, useLayoutEffect, useMemo, useState} from "react";
 
-interface UseFixedSizeListProps {
+interface useFixedSizeListProps {
     itemsCount: number;
     itemHeight: number;
     listHeight: number; //viewport height
@@ -12,12 +12,12 @@ interface UseFixedSizeListProps {
 const defaultOverscan = 3;
 const defaultScrollingDelay = 150;
 
-export function useFixedSizeList(props: UseFixedSizeListProps) {
+export function useFixedSizeList(props: useFixedSizeListProps) {
     const {itemsCount,
         itemHeight,
         listHeight,
-        overscan,
-        scrollingDelay,
+        overscan = defaultOverscan,
+        scrollingDelay = defaultScrollingDelay,
         getScrollElement
     } = props;
 
@@ -95,3 +95,5 @@ export function useFixedSizeList(props: UseFixedSizeListProps) {
         isScrolling,
     }
 }
+
+

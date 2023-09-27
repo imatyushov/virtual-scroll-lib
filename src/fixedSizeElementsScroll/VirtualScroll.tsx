@@ -2,6 +2,7 @@ import React, {useCallback, useRef, useState} from 'react';
 import {useFixedSizeList} from "./useFixedSizeList";
 
 
+
 //TODO:
 // 1.только вертикальная виртуализация
 // 2. фиксированный размер элементов
@@ -14,6 +15,7 @@ const mockItems = Array.from({length: 10_000}, (_,index) => ({
     id: Math.random().toString(36).slice(2),
     text: String(index)
 }))
+console.log(mockItems)
 
 const itemHeight = 40;
 const containerHeight = 600;
@@ -27,7 +29,7 @@ const VirtualScroll = () => {
         listHeight: containerHeight,
         getScrollElement: useCallback(() => scrollElementRef.current, []),
     })
-
+    console.log(virtualItems)
     return (
         <div style={{padding: '0 12'}}>
             <h1>List</h1>
@@ -72,4 +74,5 @@ const VirtualScroll = () => {
 };
 
 export default VirtualScroll;
+
 

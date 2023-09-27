@@ -3,6 +3,9 @@ import VirtualScroll from "./fixedSizeElementsScroll/VirtualScroll";
 
 
 const root = ReactDOM.createRoot(document.getElementById('root') as Element);
+if (!root) {
+    throw new Error(('root was not found in document'))
+}
 root.render(
       <VirtualScroll/>
 );
