@@ -38,6 +38,9 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
             setViewportHeight(clientHeight)
         })
         resizeObserver.observe(scrollElement);
+        return () => {
+            resizeObserver.unobserve(scrollElement);
+        }
     }, [getScrollElement])
 
     useLayoutEffect(() => {
