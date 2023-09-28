@@ -2,7 +2,7 @@ import {useEffect, useLayoutEffect, useMemo, useState} from "react";
 
 interface useDynamicSizeListProps {
     itemsCount: number;
-    itemHeight: number;
+    itemHeight: (index: number) => number;
     overscan?: number;
     scrollingDelay?: number;
     getScrollElement: () => HTMLElement | null;
@@ -85,26 +85,42 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
         }
     }, [getScrollElement])
 
-    const {virtualItems, startIndex, endIndex} = useMemo(() => {
+    const {virtualItems, startIndex, endIndex, totalHeight, allElements} =
+        useMemo(() => {
         const rangeStart = scrollTop;
         const rangeEnd = scrollTop + viewportHeight;
 
-        let startIndex = Math.floor(rangeStart / itemHeight);
-        let endIndex = Math.ceil(rangeEnd / itemHeight);
+        let startIndex = -1;
+        let endIndex = -1;
 
-        startIndex = Math.max(0, startIndex - overscan);
-        endIndex = Math.min(itemsCount - 1,endIndex + overscan);
-        const virtualItems = [];
-        for (let index = startIndex; index <= endIndex; index++) {
-            virtualItems.push({
+        let totalHeight = 0;
+        const allElements = Array(itemsCount);
+
+        for (let index = 0; index < itemsCount; index++) {
+            const row = {
                 index: index,
-                offsetTop: index * itemHeight
-            })
-        }
-        return {virtualItems, startIndex, endIndex};
-    }, [scrollTop, viewportHeight, itemsCount])
+                height: itemHeight(index),
+                offsetTop: totalHeight
+            }
+            totalHeight += row.height;
+            allElements[index] = row;
 
-    const totalHeight = itemHeight * itemsCount;
+            if (startIndex === -1 && row.offsetTop + row.height > rangeStart) {
+                startIndex = Math.max(0, index - overscan);
+            }
+            if (endIndex === -1 && row.offsetTop + row.height >= rangeEnd) {
+                endIndex = Math.min(itemsCount - 1, index + overscan);
+            }
+        }
+        const virtualItems = allElements.slice(startIndex, endIndex + 1)
+        return {
+            virtualItems,
+            startIndex,
+            endIndex,
+            allElements,
+            totalHeight
+        }
+    }, [scrollTop, itemsCount, overscan, itemHeight, viewportHeight])
 
     return {
         virtualItems,
@@ -112,6 +128,7 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
         endIndex,
         totalHeight,
         isScrolling,
+        allElements
     }
 }
 

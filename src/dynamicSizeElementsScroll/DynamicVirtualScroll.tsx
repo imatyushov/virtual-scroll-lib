@@ -1,7 +1,7 @@
 //TODO 2:
-// 1. размер контейнера
-// 2. разный размер элементов массива
-// 3. отслеживание элементов через resizeObserver
+// 1. размер контейнера +
+// 2. разный размер элементов массива +
+// 3. отслеживание элементов через resizeObserver +
 // 4. корректировка скролла?
 
 
@@ -14,18 +14,17 @@ const mockItems = Array.from({length: 10_000}, (_, index) => ({
 }))
 // console.log(mockItems)
 
-const itemHeight = 40;
+// const itemHeight = 40;
 const containerHeight = 550;
 
 const DynamicVirtualScroll = () => {
     const [listItems, setListItems] = useState(mockItems);
     const scrollElementRef = useRef<HTMLDivElement>(null);
     const {virtualItems, isScrolling, totalHeight} = useDynamicSizeList({
-        itemHeight: itemHeight,
+        itemHeight: () => 40 + Math.round(20 * Math.random()),
         itemsCount: listItems.length,
         getScrollElement: useCallback(() => scrollElementRef.current, []),
     })
-    // console.log(scrollElementRef.current)
 
     return (
         <div style={{padding: '0 12'}}>
@@ -49,16 +48,17 @@ const DynamicVirtualScroll = () => {
                 <div style={{height: totalHeight}}>
                     {virtualItems.map((virtualItem) => {
                         const item = listItems[virtualItem.index]!
+                        const dynamicItemHeight = virtualItem.height
                         return (
                             <div
                                 style={{
-                                    height: itemHeight,
                                     transform: `translateY(${virtualItem.offsetTop}px)`,
                                     padding: '6px 12px',
                                     position: 'absolute',
                                     top: 0,
+                                    borderBottom: '1px solid teal',
+                                    height: dynamicItemHeight
                                 }}
-                                key={item.id}
                             >
                                 {isScrolling? 'Scrolling...' : item.text}
                             </div>
