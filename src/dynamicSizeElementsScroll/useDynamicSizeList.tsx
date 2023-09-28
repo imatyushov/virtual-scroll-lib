@@ -1,9 +1,8 @@
 import {useEffect, useLayoutEffect, useMemo, useState} from "react";
 
-interface useFixedSizeListProps {
+interface useDynamicSizeListProps {
     itemsCount: number;
     itemHeight: number;
-    listHeight: number; //viewport height
     overscan?: number;
     scrollingDelay?: number;
     getScrollElement: () => HTMLElement | null;
@@ -12,19 +11,34 @@ interface useFixedSizeListProps {
 const defaultOverscan = 3;
 const defaultScrollingDelay = 200;
 
-export function useFixedSizeList(props: useFixedSizeListProps) {
-    const {itemsCount,
+export function useDynamicSizeList(props: useDynamicSizeListProps) {
+    const {
+        itemsCount,
         itemHeight,
-        listHeight,
         overscan = defaultOverscan,
         scrollingDelay = defaultScrollingDelay,
         getScrollElement
     } = props;
 
-
+    const [viewportHeight, setViewportHeight] = useState(0);
     const [scrollTop, setScrollTop] = useState(0);
     const [isScrolling, setIsScrolling] = useState(false);
 
+    useLayoutEffect(() => {
+        const scrollElement = getScrollElement();
+        if (!scrollElement) {
+            return;
+        }
+        const resizeObserver = new ResizeObserver(([entry]) => {
+            if (!entry) {
+                return;
+            }
+            const clientHeight = entry.contentBoxSize[0].blockSize ??
+                entry.target.getBoundingClientRect().height;
+            setViewportHeight(clientHeight)
+        })
+        resizeObserver.observe(scrollElement);
+    }, [getScrollElement])
 
     useLayoutEffect(() => {
         const scrollElement = getScrollElement();
@@ -55,7 +69,7 @@ export function useFixedSizeList(props: useFixedSizeListProps) {
                 clearTimeout(timeoutId);
             }
             timeoutId = setTimeout(() => {
-               setIsScrolling(false);
+                setIsScrolling(false);
             }, scrollingDelay)
         }
 
@@ -68,9 +82,9 @@ export function useFixedSizeList(props: useFixedSizeListProps) {
         }
     }, [getScrollElement])
 
-   const {virtualItems, startIndex, endIndex} = useMemo(() => {
+    const {virtualItems, startIndex, endIndex} = useMemo(() => {
         const rangeStart = scrollTop;
-        const rangeEnd = scrollTop + listHeight;
+        const rangeEnd = scrollTop + viewportHeight;
 
         let startIndex = Math.floor(rangeStart / itemHeight);
         let endIndex = Math.ceil(rangeEnd / itemHeight);
@@ -85,7 +99,7 @@ export function useFixedSizeList(props: useFixedSizeListProps) {
             })
         }
         return {virtualItems, startIndex, endIndex};
-    }, [scrollTop, listHeight, itemsCount])
+    }, [scrollTop, viewportHeight, itemsCount])
 
     const totalHeight = itemHeight * itemsCount;
 
@@ -97,5 +111,4 @@ export function useFixedSizeList(props: useFixedSizeListProps) {
         isScrolling,
     }
 }
-
 

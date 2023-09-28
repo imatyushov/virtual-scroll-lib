@@ -1,5 +1,5 @@
 import ReactDOM from 'react-dom/client';
-import VirtualScroll from "./fixedSizeElementsScroll/VirtualScroll";
+import DynamicVirtualScroll from "./dynamicSizeElementsScroll/DynamicVirtualScroll";
 
 
 const root = ReactDOM.createRoot(document.getElementById('root') as Element);
@@ -7,7 +7,7 @@ if (!root) {
     throw new Error(('root was not found in document'))
 }
 root.render(
-      <VirtualScroll/>
+     <DynamicVirtualScroll/>
 );
 
 // If you want to start measuring performance in your app, pass a function

@@ -1,35 +1,32 @@
-import React, {useCallback, useRef, useState} from 'react';
-import {useFixedSizeList} from "./useFixedSizeList";
+//TODO 2:
+// 1. размер контейнера
+// 2. разный размер элементов массива
+// 3. отслеживание элементов через resizeObserver
+// 4. корректировка скролла?
 
 
+import {useCallback, useRef, useState} from "react";
+import {useDynamicSizeList} from "./useDynamicSizeList";
 
-//TODO:
-// 1.только вертикальная виртуализация
-// 2. фиксированный размер элементов
-// 3. overscan
-// 4. flag isScrolling
-// 5. вынести логику в хук
-
-
-const mockItems = Array.from({length: 10_000}, (_,index) => ({
+const mockItems = Array.from({length: 10_000}, (_, index) => ({
     id: Math.random().toString(36).slice(2),
     text: String(index)
 }))
-console.log(mockItems)
+// console.log(mockItems)
 
 const itemHeight = 40;
-const containerHeight = 600;
+const containerHeight = 550;
 
-const VirtualScroll = () => {
+const DynamicVirtualScroll = () => {
     const [listItems, setListItems] = useState(mockItems);
     const scrollElementRef = useRef<HTMLDivElement>(null);
-    const {virtualItems, totalHeight, isScrolling} = useFixedSizeList({
+    const {virtualItems, isScrolling, totalHeight} = useDynamicSizeList({
         itemHeight: itemHeight,
         itemsCount: listItems.length,
-        listHeight: containerHeight,
         getScrollElement: useCallback(() => scrollElementRef.current, []),
     })
-    console.log(virtualItems)
+    // console.log(scrollElementRef.current)
+
     return (
         <div style={{padding: '0 12'}}>
             <h1>List</h1>
@@ -46,7 +43,7 @@ const VirtualScroll = () => {
                 style={{
                     height: containerHeight,
                     overflow: "auto",
-                    border: '1px solid lightgrey',
+                    border: '1px solid green',
                     position: 'relative'
                 }}>
                 <div style={{height: totalHeight}}>
@@ -73,6 +70,4 @@ const VirtualScroll = () => {
     );
 };
 
-export default VirtualScroll;
-
-
+export default DynamicVirtualScroll;
