@@ -85,50 +85,52 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
         }
     }, [getScrollElement])
 
-    const {virtualElements, startIndex, endIndex, allElements, totalHeight}
-        = useMemo(() => {
+    const {virtualItems, startIndex, endIndex, allItems, totalHeight} =
+        useMemo(() => {
         const rangeStart = scrollTop;
         const rangeEnd = scrollTop + viewportHeight;
 
-        let totalHeight = 0;
         let startIndex = -1;
         let endIndex = -1;
 
-        const allElements = Array(itemsCount);
+        let totalHeight = 0;
+        const allItems = Array(itemsCount);
 
         for (let index = 0; index < itemsCount; index++) {
-            const element = {
+            const item = {
                 index,
                 height: itemHeight(index),
                 offsetTop: totalHeight
             }
-            totalHeight += element.height;
-            allElements[index] = element;
+            totalHeight += item.height;
+            allItems[index] = item;
 
-            if (startIndex === -1 && element.height + element.offsetTop > rangeStart) {
+            if (startIndex === -1 && item.height + item.offsetTop > rangeStart) {
                 startIndex = Math.max(0, index - overscan);
             }
-            if (endIndex === -1 && element.height + element.offsetTop > rangeEnd) {
-                endIndex = Math.min(itemsCount - 1, index + overscan)
+            if (endIndex === -1 && item.height + item.offsetTop > rangeEnd) {
+                endIndex = Math.min(itemsCount - 1, index + overscan);
             }
         }
-        const virtualElements = allElements.slice(startIndex, endIndex);
+        const virtualItems = allItems.slice(startIndex, endIndex);
+
         return {
-            virtualElements,
+            virtualItems,
             startIndex,
             endIndex,
-            allElements,
-            totalHeight
+            itemsCount,
+            totalHeight,
+            allItems
         }
-    }, [scrollTop, viewportHeight, itemsCount, overscan, itemHeight])
+    }, [scrollTop, viewportHeight, overscan, itemHeight, itemsCount])
 
     return {
-        virtualElements,
+        virtualItems,
         startIndex,
         endIndex,
         totalHeight,
         isScrolling,
-        allElements
+        allItems
     }
 }
 
