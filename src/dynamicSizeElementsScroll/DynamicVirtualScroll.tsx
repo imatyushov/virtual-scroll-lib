@@ -7,25 +7,28 @@
 
 import {useCallback, useRef, useState} from "react";
 import {useDynamicSizeList} from "./useDynamicSizeList";
+import {faker} from "@faker-js/faker";
 
 const mockItems = Array.from({length: 10_000}, (_, index) => ({
     id: Math.random().toString(36).slice(2),
-    text: String(index)
+    text: faker.lorem.paragraph({
+        min: 3, max: 6
+    })
 }))
-// console.log(mockItems)
+console.log('Mock items:', mockItems);
 
 // const itemHeight = 40;
-const containerHeight = 550;
+const containerHeight = 750;
 
 const DynamicVirtualScroll = () => {
     const [listItems, setListItems] = useState(mockItems);
     const scrollElementRef = useRef<HTMLDivElement>(null);
-    const {virtualItems, isScrolling, totalHeight} = useDynamicSizeList({
-        itemHeight: () => 40 + Math.round(20 * Math.random()),
+    const {virtualItems, totalHeight, isScrolling, measureItem} = useDynamicSizeList({
+        estimateItemHeight: useCallback(() => 16, []),
+        getItemKey: useCallback((index) => listItems[index].id, [listItems]),
         itemsCount: listItems.length,
-        getScrollElement: useCallback(() => scrollElementRef.current, []),
+        getScrollElement: useCallback(() => scrollElementRef.current, [])
     })
-
     return (
         <div style={{padding: '0 12'}}>
             <h1>List</h1>
@@ -51,13 +54,15 @@ const DynamicVirtualScroll = () => {
                         const dynamicItemHeight = virtualItem.height
                         return (
                             <div
+                                ref={measureItem}
+                                data-index={virtualItem.index}
                                 style={{
                                     transform: `translateY(${virtualItem.offsetTop}px)`,
                                     padding: '6px 12px',
                                     position: 'absolute',
                                     top: 0,
                                     borderBottom: '1px solid teal',
-                                    height: dynamicItemHeight
+                                    // height: dynamicItemHeight
                                 }}
                             >
                                 {isScrolling? 'Scrolling...' : item.text}

@@ -4,6 +4,7 @@
     "module": "commonjs",
     "sourceMap": true,
     "allowSyntheticDefaultImports": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "strict": false
   }
 }
