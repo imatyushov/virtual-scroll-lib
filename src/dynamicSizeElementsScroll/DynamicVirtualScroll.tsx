@@ -17,21 +17,23 @@ const mockItems = Array.from({length: 10_000}, (_, index) => ({
 }))
 console.log('Mock items:', mockItems);
 
-// const itemHeight = 40;
+const itemHeight = 50;
 const containerHeight = 750;
 
 const DynamicVirtualScroll = () => {
     const [listItems, setListItems] = useState(mockItems);
     const scrollElementRef = useRef<HTMLDivElement>(null);
-    const {virtualItems, totalHeight, isScrolling, measureItem} = useDynamicSizeList({
+
+    const {virtualItems, isScrolling, totalHeight, computedItem} = useDynamicSizeList({
         estimateItemHeight: useCallback(() => 16, []),
-        getItemKey: useCallback((index) => listItems[index].id, [listItems]),
+        getItemKey: useCallback((index) => listItems[index]!.id, [listItems]),
         itemsCount: listItems.length,
         getScrollElement: useCallback(() => scrollElementRef.current, [])
-    })
+    });
+
     return (
         <div style={{padding: '0 12'}}>
-            <h1>List</h1>
+            <h1>Virtual List</h1>
             <span>
                 {isScrolling ? <div>IsScrolling</div> : <div>NotIsScrolling</div>}
             </span>
@@ -45,27 +47,27 @@ const DynamicVirtualScroll = () => {
                 style={{
                     height: containerHeight,
                     overflow: "auto",
-                    border: '1px solid green',
+                    border: '2px solid green',
                     position: 'relative'
                 }}>
                 <div style={{height: totalHeight}}>
                     {virtualItems.map((virtualItem) => {
-                        const item = listItems[virtualItem.index]!
-                        const dynamicItemHeight = virtualItem.height
+                        const item = listItems[virtualItem.index]!;
+                        const virtualItemHeight = virtualItem.height;
                         return (
                             <div
-                                ref={measureItem}
+                                ref={computedItem}
                                 data-index={virtualItem.index}
+                                key={item.id}
                                 style={{
                                     transform: `translateY(${virtualItem.offsetTop}px)`,
                                     padding: '6px 12px',
                                     position: 'absolute',
                                     top: 0,
-                                    borderBottom: '1px solid teal',
-                                    // height: dynamicItemHeight
+                                    borderBottom: '1px solid teal'
                                 }}
                             >
-                                {isScrolling? 'Scrolling...' : item.text}
+                                {virtualItem.index}_) {item.text}
                             </div>
                         )
                     })}
