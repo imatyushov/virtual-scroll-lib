@@ -24,7 +24,7 @@ const DynamicVirtualScroll = () => {
     const [listItems, setListItems] = useState(mockItems);
     const scrollElementRef = useRef<HTMLDivElement>(null);
 
-    const {virtualItems, isScrolling, totalHeight, computedItem} = useDynamicSizeList({
+    const {virtualItems, isScrolling, totalHeight, computedItemSize} = useDynamicSizeList({
         estimateItemHeight: useCallback(() => 16, []),
         getItemKey: useCallback((index) => listItems[index]!.id, [listItems]),
         itemsCount: listItems.length,
@@ -56,7 +56,7 @@ const DynamicVirtualScroll = () => {
                         const virtualItemHeight = virtualItem.height;
                         return (
                             <div
-                                ref={computedItem}
+                                ref={computedItemSize}
                                 data-index={virtualItem.index}
                                 key={item.id}
                                 style={{
@@ -67,7 +67,7 @@ const DynamicVirtualScroll = () => {
                                     borderBottom: '1px solid teal'
                                 }}
                             >
-                                {virtualItem.index}_) {item.text}
+                                {virtualItem.index}_{item.text}
                             </div>
                         )
                     })}

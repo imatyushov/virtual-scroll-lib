@@ -29,6 +29,7 @@ function validateProps(props: useDynamicSizeListProps) {
     }
 }
 
+
 export function useDynamicSizeList(props: useDynamicSizeListProps) {
     validateProps(props);
     const {
@@ -132,12 +133,11 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
         let endIndex = -1;
 
         let totalHeight = 0;
-        const allItems = Array(itemsCount);
+        const allItems: dynamicSizeListItem[] = Array(itemsCount);
 
         for (let index = 0; index < itemsCount; index++) {
             const key = getItemKey(index);
-
-            const item: dynamicSizeListItem = {
+            const item = {
                 key,
                 index,
                 height: getItemHeight(index),
@@ -150,7 +150,7 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
             if (startIndex === -1 && item.height + item.offsetTop > rangeStart) {
                 startIndex = Math.max(0, index - overscan);
             }
-            if (endIndex === -1 && item.height + item.offsetTop > rangeEnd) {
+            if (endIndex === -1 && item.height + item.offsetTop >= rangeEnd) {
                 endIndex = Math.min(itemsCount - 1, index + overscan);
             }
         }
@@ -164,19 +164,22 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
         }
     }, [scrollTop, viewportHeight, itemsCount, overscan, itemHeight, estimateItemHeight, getItemKey, computedItemsCache])
 
-    const computedItem = useCallback((item: Element | null) => {
+    const computedItemSize = useCallback((item: Element | null) => {
         if (!item) {
             return;
         }
         const indexAttribute = item.getAttribute('data-index') || '';
         const index = parseInt(indexAttribute, 10);
-        if (!index) {
-            console.error(`dynamic items must have a valid data-index attribute`);
+
+        if (Number.isNaN(index)) {
+            console.error('dynamic elements must have a valid `data-index` attribute');
+            return;
         }
-        const size = item.getBoundingClientRect();
+
+        const itemHeight = item.getBoundingClientRect().height;
         const key = getItemKey(index);
 
-        setComputedItemsCache((cache) => ({...cache, [key]: size.height}));
+        setComputedItemsCache((cache) => ({...cache, [key]: itemHeight}));
 
     }, [getItemKey])
 
@@ -187,7 +190,8 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
         totalHeight,
         isScrolling,
         allItems,
-        computedItem
+        computedItemSize
     }
 }
+
 

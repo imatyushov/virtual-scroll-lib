@@ -47,14 +47,14 @@ export function useFixedSizeList(props: useFixedSizeListProps) {
         if (!scrollElement) {
             return;
         }
-        let timeoutId: NodeJS.Timeout = null;
+        let timeoutId: number | null = null;
         const handleScroll = () => {
             setIsScrolling(true);
 
             if (typeof timeoutId === 'number') {
                 clearTimeout(timeoutId);
             }
-            timeoutId = setTimeout(() => {
+            timeoutId = window.setTimeout(() => {
                setIsScrolling(false);
             }, scrollingDelay)
         }
