@@ -1,4 +1,8 @@
-import {useCallback, useEffect, useInsertionEffect, useLayoutEffect, useMemo, useRef, useState} from "react";
+import {
+    useCallback, useEffect,
+    useInsertionEffect, useLayoutEffect,
+    useMemo, useRef, useState
+} from "react";
 
 type Key = string | number;
 
@@ -25,7 +29,9 @@ const defaultScrollingDelay = 100;
 function validateProps(props: useDynamicSizeListProps) {
     const {itemHeight, estimateItemHeight} = props;
     if (!itemHeight && !estimateItemHeight) {
-        throw new Error(`you must pass either itemHeight ${itemHeight} or estimateItemHeight ${estimateItemHeight} prop`)
+        throw new Error(
+            `you must pass either itemHeight ${itemHeight} or estimateItemHeight ${estimateItemHeight} prop`
+        )
     }
 }
 
@@ -174,6 +180,42 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
 
 
     const latestData = useLatest({computedItemsCache, getItemKey});
+
+    const itemsResizeObserver = useMemo(() => {
+        const ro = new ResizeObserver((entries) => {
+            entries.forEach(entry => {
+                const item = entry.target;
+
+                if (!item.isConnected) {
+                    itemsResizeObserver.unobserve(item);
+                    return;
+                }
+
+                const indexAttribute = item.getAttribute('data-index') || '';
+                const index = parseInt(indexAttribute, 10);
+
+                if (Number.isNaN(index)) {
+                    console.error('dynamic elements must have a valid `data-index` attribute');
+                    return;
+                }
+
+                const {computedItemsCache, getItemKey} = latestData.current;
+                const key = getItemKey(index);
+
+
+                const height = entry.contentBoxSize[0].blockSize ??
+                    item.getBoundingClientRect().height;
+
+                if (computedItemsCache[key] === height) {
+                    return;
+                }
+                setComputedItemsCache((cache) => ({...cache, [key]: height}));
+            });
+        });
+        return ro;
+    }, [])
+
+
     const computedItemSize = useCallback((item: Element | null) => {
         if (!item) {
             return;
@@ -188,6 +230,9 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
 
         const {computedItemsCache, getItemKey} = latestData.current;
         const key = getItemKey(index);
+        itemsResizeObserver.observe(item);
+
+
         if (typeof computedItemsCache[key] === 'number') {
             return;
         }
@@ -196,7 +241,7 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
 
         setComputedItemsCache((cache) => ({...cache, [key]: itemHeight}));
 
-    }, [latestData])
+    }, [latestData, itemsResizeObserver])
 
     return {
         virtualItems,
