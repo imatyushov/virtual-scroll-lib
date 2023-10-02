@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useLayoutEffect, useMemo, useState} from "react";
+import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from "react";
 
 type Key = string | number;
 
@@ -29,6 +29,11 @@ function validateProps(props: useDynamicSizeListProps) {
     }
 }
 
+function useLatest<T>(value: T) {
+    const valueRef = useRef(value);
+    valueRef.current = value;
+    return valueRef.current;
+}
 
 export function useDynamicSizeList(props: useDynamicSizeListProps) {
     validateProps(props);
@@ -164,6 +169,8 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
         }
     }, [scrollTop, viewportHeight, itemsCount, overscan, itemHeight, estimateItemHeight, getItemKey, computedItemsCache])
 
+
+    const latestData = useLatest({computedItemsCache, getItemKey});
     const computedItemSize = useCallback((item: Element | null) => {
         if (!item) {
             return;
@@ -176,12 +183,18 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
             return;
         }
 
-        const itemHeight = item.getBoundingClientRect().height;
+        const {computedItemsCache, getItemKey} = latestData;
         const key = getItemKey(index);
+
+        if (typeof computedItemsCache[key] === 'number') {
+            return;
+        }
+
+        const itemHeight = item.getBoundingClientRect().height;
 
         setComputedItemsCache((cache) => ({...cache, [key]: itemHeight}));
 
-    }, [getItemKey])
+    }, [])
 
     return {
         virtualItems,

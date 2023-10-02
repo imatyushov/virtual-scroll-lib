@@ -15,6 +15,7 @@ const mockItems = Array.from({length: 10_000}, (_, index) => ({
         min: 3, max: 6
     })
 }))
+
 console.log('Mock items:', mockItems);
 
 const itemHeight = 50;
