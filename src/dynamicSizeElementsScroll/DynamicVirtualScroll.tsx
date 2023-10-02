@@ -5,7 +5,7 @@
 // 4. корректировка скролла?
 
 
-import {useCallback, useRef, useState} from "react";
+import {useCallback, useInsertionEffect, useLayoutEffect, useRef, useState} from "react";
 import {useDynamicSizeList} from "./useDynamicSizeList";
 import {faker} from "@faker-js/faker";
 
@@ -16,7 +16,7 @@ const mockItems = Array.from({length: 10_000}, (_, index) => ({
     })
 }))
 
-console.log('Mock items:', mockItems);
+// console.log('Mock items:', mockItems);
 
 const itemHeight = 50;
 const containerHeight = 750;
@@ -31,6 +31,18 @@ const DynamicVirtualScroll = () => {
         itemsCount: listItems.length,
         getScrollElement: useCallback(() => scrollElementRef.current, [])
     });
+
+    useLayoutEffect(() => {
+        console.log('use layout effect')
+    }, [])
+
+    useInsertionEffect(() => {
+        console.log('use insertion effect')
+    }, [])
+
+    const cbRef = useCallback(() => {
+        console.log('callback ref')
+    }, [])
 
     return (
         <div style={{padding: '0 12'}}>

@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from "react";
+import {useCallback, useEffect, useInsertionEffect, useLayoutEffect, useMemo, useRef, useState} from "react";
 
 type Key = string | number;
 
@@ -31,8 +31,10 @@ function validateProps(props: useDynamicSizeListProps) {
 
 function useLatest<T>(value: T) {
     const valueRef = useRef(value);
-    valueRef.current = value;
-    return valueRef.current;
+    useInsertionEffect(() => {
+        valueRef.current = value;
+    }, [])
+    return valueRef;
 }
 
 export function useDynamicSizeList(props: useDynamicSizeListProps) {
@@ -117,6 +119,7 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
         }
     }, [getScrollElement]);
 
+
     const {virtualItems, startIndex, endIndex, totalHeight, allItems} =
         useMemo(() => {
         const getItemHeight = (index: number) => {
@@ -183,9 +186,8 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
             return;
         }
 
-        const {computedItemsCache, getItemKey} = latestData;
+        const {computedItemsCache, getItemKey} = latestData.current;
         const key = getItemKey(index);
-
         if (typeof computedItemsCache[key] === 'number') {
             return;
         }
@@ -194,7 +196,7 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
 
         setComputedItemsCache((cache) => ({...cache, [key]: itemHeight}));
 
-    }, [])
+    }, [latestData])
 
     return {
         virtualItems,
