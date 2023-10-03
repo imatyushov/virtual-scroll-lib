@@ -179,29 +179,27 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
     }, [scrollTop, viewportHeight, itemsCount, overscan, itemHeight, estimateItemHeight, getItemKey, computedItemsCache])
 
 
-    const latestData = useLatest({computedItemsCache, getItemKey});
+    const theLatestData = useLatest({computedItemsCache, getItemKey});
 
-    const itemsResizeObserver = useMemo(() => {
-        const ro = new ResizeObserver((entries) => {
-            entries.forEach(entry => {
+    const {resizeObserver} = useMemo(() => {
+        const resizeObserver = new ResizeObserver((entries) => {
+            entries.forEach((entry) => {
                 const item = entry.target;
 
                 if (!item.isConnected) {
-                    itemsResizeObserver.unobserve(item);
+                    resizeObserver.unobserve(item);
                     return;
                 }
 
                 const indexAttribute = item.getAttribute('data-index') || '';
                 const index = parseInt(indexAttribute, 10);
-
                 if (Number.isNaN(index)) {
-                    console.error('dynamic elements must have a valid `data-index` attribute');
+                    console.error('dynamic items must have a correct `data-index` attribute');
                     return;
                 }
 
-                const {computedItemsCache, getItemKey} = latestData.current;
+                const {computedItemsCache, getItemKey} = theLatestData.current;
                 const key = getItemKey(index);
-
 
                 const height = entry.contentBoxSize[0].blockSize ??
                     item.getBoundingClientRect().height;
@@ -209,12 +207,14 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
                 if (computedItemsCache[key] === height) {
                     return;
                 }
-                setComputedItemsCache((cache) => ({...cache, [key]: height}));
-            });
-        });
-        return ro;
-    }, [])
 
+                setComputedItemsCache((cache) => ({...cache, [key]: height}));
+            })
+        })
+        return {
+            resizeObserver
+        };
+    }, [])
 
     const computedItemSize = useCallback((item: Element | null) => {
         if (!item) {
@@ -222,16 +222,14 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
         }
         const indexAttribute = item.getAttribute('data-index') || '';
         const index = parseInt(indexAttribute, 10);
-
         if (Number.isNaN(index)) {
-            console.error('dynamic elements must have a valid `data-index` attribute');
+            console.error('dynamic items must have a correct `data-index` attribute');
             return;
         }
 
-        const {computedItemsCache, getItemKey} = latestData.current;
+        const {computedItemsCache, getItemKey} = theLatestData.current;
         const key = getItemKey(index);
-        itemsResizeObserver.observe(item);
-
+        resizeObserver.observe(item);
 
         if (typeof computedItemsCache[key] === 'number') {
             return;
@@ -240,8 +238,8 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
         const itemHeight = item.getBoundingClientRect().height;
 
         setComputedItemsCache((cache) => ({...cache, [key]: itemHeight}));
+    }, [theLatestData, resizeObserver])
 
-    }, [latestData, itemsResizeObserver])
 
     return {
         virtualItems,

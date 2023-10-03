@@ -4,6 +4,13 @@
 // 3. отслеживание элементов через resizeObserver +
 // 4. корректировка скролла?
 
+//TODO 3:
+// 1. Динамический замер элементов +
+// 2. Кеширование замеров +
+// 3. хук useLatest (решение проблемы с Concurrent mode React 18) +
+// 4. Проверяем, если элемент уже в кэше, то нет необходимости замера +
+// 5. Перезамер элементов, если они изменили высоту +
+
 
 import {useCallback, useInsertionEffect, useLayoutEffect, useRef, useState} from "react";
 import {useDynamicSizeList} from "./useDynamicSizeList";
@@ -26,7 +33,7 @@ const DynamicVirtualScroll = () => {
     const scrollElementRef = useRef<HTMLDivElement>(null);
 
     const {virtualItems, isScrolling, totalHeight, computedItemSize} = useDynamicSizeList({
-        estimateItemHeight: useCallback(() => 16, []),
+        estimateItemHeight: useCallback(() => 20, []),
         getItemKey: useCallback((index) => listItems[index]!.id, [listItems]),
         itemsCount: listItems.length,
         getScrollElement: useCallback(() => scrollElementRef.current, [])
