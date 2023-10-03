@@ -33,7 +33,7 @@ const DynamicVirtualScroll = () => {
     const scrollElementRef = useRef<HTMLDivElement>(null);
 
     const {virtualItems, isScrolling, totalHeight, computedItemSize} = useDynamicSizeList({
-        estimateItemHeight: useCallback(() => 20, []),
+        estimateItemHeight: useCallback(() => 24, []),
         getItemKey: useCallback((index) => listItems[index]!.id, [listItems]),
         itemsCount: listItems.length,
         getScrollElement: useCallback(() => scrollElementRef.current, [])

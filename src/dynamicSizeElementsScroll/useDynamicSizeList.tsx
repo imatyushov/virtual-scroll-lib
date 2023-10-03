@@ -179,7 +179,9 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
     }, [scrollTop, viewportHeight, itemsCount, overscan, itemHeight, estimateItemHeight, getItemKey, computedItemsCache])
 
 
-    const theLatestData = useLatest({computedItemsCache, getItemKey});
+
+    const theLatestData = useLatest({computedItemsCache, getItemKey, allItems, getScrollElement, scrollTop});
+
 
     const {resizeObserver} = useMemo(() => {
         const resizeObserver = new ResizeObserver((entries) => {
@@ -198,7 +200,8 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
                     return;
                 }
 
-                const {computedItemsCache, getItemKey} = theLatestData.current;
+                const {computedItemsCache, getItemKey, allItems, getScrollElement, scrollTop} = theLatestData.current;
+
                 const key = getItemKey(index);
 
                 const height = entry.contentBoxSize[0].blockSize ??
@@ -208,13 +211,23 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
                     return;
                 }
 
-                setComputedItemsCache((cache) => ({...cache, [key]: height}));
+                const element = allItems[index]!;
+                const scrollUpGap = height - element.height;
+                if (scrollUpGap !== 0 && scrollTop > element.offsetTop) {
+                    const scrollElement = getScrollElement();
+                    if (scrollElement) {
+                        scrollElement.scrollBy(0, scrollUpGap);
+                    }
+                }
+
+                setComputedItemsCache((cache) => ({...cache, [key]: height}))
             })
         })
         return {
             resizeObserver
         };
-    }, [])
+    }, [theLatestData])
+
 
     const computedItemSize = useCallback((item: Element | null) => {
         if (!item) {
@@ -227,7 +240,7 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
             return;
         }
 
-        const {computedItemsCache, getItemKey} = theLatestData.current;
+        const {computedItemsCache, getItemKey, allItems, getScrollElement, scrollTop} = theLatestData.current;
         const key = getItemKey(index);
         resizeObserver.observe(item);
 
@@ -236,6 +249,15 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
         }
 
         const itemHeight = item.getBoundingClientRect().height;
+
+        const element = allItems[index]!;
+        const scrollUpGap = itemHeight - element.height;
+        if (scrollUpGap !== 0 && scrollTop > element.offsetTop) {
+            const scrollElement = getScrollElement();
+            if (scrollElement) {
+                scrollElement.scrollBy(0, scrollUpGap);
+            }
+        }
 
         setComputedItemsCache((cache) => ({...cache, [key]: itemHeight}));
     }, [theLatestData, resizeObserver])
