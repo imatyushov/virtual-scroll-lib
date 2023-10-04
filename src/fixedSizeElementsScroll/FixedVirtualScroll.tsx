@@ -1,5 +1,6 @@
 import React, {useCallback, useRef, useState} from 'react';
 import {useFixedSizeList} from "./useFixedSizeList";
+import {faker} from "@faker-js/faker";
 
 //TODO 1:
 // 1.только вертикальная виртуализация
@@ -11,7 +12,9 @@ import {useFixedSizeList} from "./useFixedSizeList";
 
 const mockItems = Array.from({length: 10_000}, (_,index) => ({
     id: Math.random().toString(36).slice(2),
-    text: String(index)
+    text: faker.lorem.paragraph({
+    min: 3, max: 6
+})
 }))
 console.log(mockItems)
 
@@ -61,7 +64,7 @@ const FixedVirtualScroll = () => {
                                 }}
                                 key={item.id}
                             >
-                                {isScrolling? 'Scrolling...' : item.text}
+                                {item.id && item.text}
                             </div>
                         )
                     })}
