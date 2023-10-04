@@ -70,6 +70,7 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
             if (!entry) {
                 return;
             }
+
             const clientHeight = entry.contentBoxSize[0].blockSize ??
                 entry.target.getBoundingClientRect().height;
 
@@ -179,9 +180,9 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
     }, [scrollTop, viewportHeight, itemsCount, overscan, itemHeight, estimateItemHeight, getItemKey, computedItemsCache]);
 
 
-    const theLatestData = useLatest({computedItemsCache, getItemKey, allItems, getScrollElement, scrollTop})
+    const theLatestData = useLatest({computedItemsCache, getItemKey, getScrollElement, scrollTop});
 
-    const computeItemSize = useCallback((
+    const computeItemHeight = useCallback((
         item: Element | null,
         resizeObserver: ResizeObserver,
         entry?: ResizeObserverEntry
@@ -199,55 +200,63 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
         const dataIndex = item.getAttribute('data-index') || '';
         const index = parseInt(dataIndex, 10);
         if (Number.isNaN(index)) {
-            console.error('Virtual items must have a correct `data-index` attribute');
+            console.error('virtual items must have a correct `data-index` attribute');
             return;
         }
 
-        const {computedItemsCache, getItemKey, allItems, getScrollElement, scrollTop} = theLatestData.current;
+        const {
+            computedItemsCache,
+            getItemKey,
+            getScrollElement,
+            scrollTop
+        } = theLatestData.current;
 
         const key = getItemKey(index);
-        const isResize = Boolean(entry);
+        const isResizeItem = Boolean(entry);
 
         resizeObserver.observe(item);
 
-        if (!isResize && typeof computedItemsCache[key] === 'number') {
+        if (!isResizeItem && typeof computedItemsCache[key] === 'number') {
             return;
         }
+
         if (!entry) {
             return;
         }
         const itemHeight = entry.contentBoxSize[0].blockSize ??
             item.getBoundingClientRect().height;
 
-        if (computedItemsCache[index] === itemHeight) {
+        if (computedItemsCache[key] === itemHeight) {
             return;
         }
 
-        const element = allItems[index]!;
+        const element = allItems[index];
         const scrollUpGap = itemHeight - element.height;
-
         if (scrollUpGap !== 0 && scrollTop > element.offsetTop) {
             const scrollElement = getScrollElement();
             if (scrollElement) {
                 scrollElement.scrollBy(0, scrollUpGap);
             }
         }
+
         setComputedItemsCache((cache) => ({...cache, [key]: itemHeight}));
     }, [])
 
     const itemsResizeObserver = useMemo(() => {
         const resizeObserver = new ResizeObserver((entries) => {
-            entries.forEach((entry) => {
+            entries.forEach(entry => {
                 const item = entry.target;
-                computeItemSize(item, resizeObserver, entry);
-            });
-        });
+
+                computeItemHeight(item, resizeObserver, entry);
+            })
+        })
         return resizeObserver;
     }, [theLatestData]);
 
     const computeItem = useCallback((item: Element | null) => {
-        computeItemSize(item, itemsResizeObserver);
+        computeItemHeight(item, itemsResizeObserver);
     }, [itemsResizeObserver])
+
 
     return {
         virtualItems,
