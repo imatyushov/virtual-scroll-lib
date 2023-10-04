@@ -32,8 +32,8 @@ const DynamicVirtualScroll = () => {
     const [listItems, setListItems] = useState(mockItems);
     const scrollElementRef = useRef<HTMLDivElement>(null);
 
-    const {virtualItems, isScrolling, totalHeight, computedItemSize} = useDynamicSizeList({
-        estimateItemHeight: useCallback(() => 24, []),
+    const {virtualItems, isScrolling, totalHeight, computeItem} = useDynamicSizeList({
+        estimateItemHeight: useCallback(() => 16, []),
         getItemKey: useCallback((index) => listItems[index]!.id, [listItems]),
         itemsCount: listItems.length,
         getScrollElement: useCallback(() => scrollElementRef.current, [])
@@ -58,7 +58,9 @@ const DynamicVirtualScroll = () => {
                 {isScrolling ? <div>IsScrolling</div> : <div>NotIsScrolling</div>}
             </span>
             <div style={{marginBottom: 12}}>
-                <button onClick={() => setListItems((items) => items.slice().reverse())}>
+                <button
+                    onClick={() => setListItems((items) => items.slice().reverse())}
+                >
                     reverse
                 </button>
             </div>
@@ -76,15 +78,14 @@ const DynamicVirtualScroll = () => {
                         const virtualItemHeight = virtualItem.height;
                         return (
                             <div
-                                ref={computedItemSize}
+                                ref={computeItem}
                                 data-index={virtualItem.index}
                                 key={item.id}
                                 style={{
                                     transform: `translateY(${virtualItem.offsetTop}px)`,
                                     padding: '6px 12px',
                                     position: 'absolute',
-                                    top: 0,
-                                    borderBottom: '1px solid teal'
+                                    top: 0
                                 }}
                             >
                                 {virtualItem.index}_{item.text}
