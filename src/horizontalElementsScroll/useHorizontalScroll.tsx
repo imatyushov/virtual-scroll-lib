@@ -171,8 +171,8 @@ export function useHorisontalScroll(props: useDynamicSizeGridProps) {
             const rangeRowStart = scrollTop;
             const rangeRowEnd = scrollTop + gridHeight;
 
-            let startRowIndex = -1;
-            let endRowIndex = -1;
+            let startRowIndex = 0;
+            let endRowIndex = 0;
 
             let totalRowsHeight = 0;
             const allRows: dynamicSizeGridRow[] = Array(rowsCount);
@@ -189,13 +189,16 @@ export function useHorisontalScroll(props: useDynamicSizeGridProps) {
                 totalRowsHeight += row.height;
                 allRows[index] = row;
 
-                if (startRowIndex === -1 && row.height + row.offsetTop > rangeRowStart) {
-                    startRowIndex = Math.max(0, index - overscanY);
+                if ((row.height + row.offsetTop) < rangeRowStart) {
+                    startRowIndex++;
                 }
-                if (endRowIndex === -1 && row.height + row.offsetTop >= rangeRowEnd) {
-                    endRowIndex = Math.min(rowsCount - 1, index + overscanY);
+                if ((row.height + row.offsetTop) < rangeRowEnd) {
+                    endRowIndex++;
                 }
             }
+            startRowIndex = Math.max(0, startRowIndex - overscanY);
+            endRowIndex = Math.min(rowsCount - 1, endRowIndex + overscanY);
+
             const virtualRows = allRows.slice(startRowIndex, endRowIndex + 1);
             return {
                 virtualRows,
@@ -213,8 +216,8 @@ export function useHorisontalScroll(props: useDynamicSizeGridProps) {
             const rangeColumnStart = scrollLeft;
             const rangeColumnEnd = scrollLeft + gridWidth;
 
-            let startColumnIndex = -1;
-            let endColumnIndex = -1;
+            let startColumnIndex = 0;
+            let endColumnIndex = 0;
 
             let totalColumnsWidth = 0;
             const allColumns: dynamicSizeGridColumn[] = Array(columnsCount);
@@ -231,13 +234,16 @@ export function useHorisontalScroll(props: useDynamicSizeGridProps) {
                 totalColumnsWidth += column.width;
                 allColumns[index] = column;
 
-                if (startColumnIndex === -1 && column.width + column.offsetLeft > rangeColumnStart) {
-                    startColumnIndex = Math.max(0, index - overscanX);
+                if ((column.width + column.offsetLeft) < rangeColumnStart) {
+                    startColumnIndex++;
                 }
-                if (endColumnIndex === -1 && column.width + column.offsetLeft >= rangeColumnEnd) {
-                    endColumnIndex = Math.min(columnsCount - 1, index + overscanX);
+                if ((column.width + column.offsetLeft) < rangeColumnEnd) {
+                   endColumnIndex++;
                 }
             }
+            startColumnIndex = Math.max(0, startColumnIndex - overscanX);
+            endColumnIndex = Math.min(columnsCount - 1, endColumnIndex + overscanX);
+
             const virtualColumns = allColumns.slice(startColumnIndex, endColumnIndex + 1);
             return {
                 virtualColumns,
@@ -247,9 +253,6 @@ export function useHorisontalScroll(props: useDynamicSizeGridProps) {
                 allColumns
             }
         }, [scrollLeft, gridWidth, columnsCount, overscanX, columnsWidth, getColumnKey]);
-
-
-
 
 
     const theLatestData = useLatest({computedRowSizeCache, getRowKey, getScrollElement, scrollTop});

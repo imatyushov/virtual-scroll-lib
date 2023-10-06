@@ -91,13 +91,14 @@ const TestHorizontalScroll = () => {
                                     display: 'flex',
                                 }}
                             >
-                                {virtualColumns.map((virtualColumn) => {
-                                    const item = gridItems[virtualRow.index]?.columns[virtualColumn.key];
+                                {virtualColumns.map((virtualColumn, index) => {
+                                    const item = gridItems[virtualRow.index]?.columns[virtualColumn.index];
                                     return (
                                         <div
                                             key={virtualColumn.key}
                                             style={{
                                                 width: virtualColumn.width,
+                                                marginLeft: index === 0 ? virtualColumn.offsetLeft : 0,
                                                 border: '1px solid lightgray'
                                         }}
                                         >
