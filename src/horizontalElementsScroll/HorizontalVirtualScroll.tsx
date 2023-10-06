@@ -26,11 +26,23 @@ const TestHorizontalScroll = () => {
     const [gridItems, setGridItems] = useState(createMockItems);
     const scrollElementRef = useRef<HTMLDivElement>(null);
 
-    const {isScrolling, virtualRows, totalHeight, computeRow} = useHorisontalScroll({
-        estimateRowHeight: useCallback(() => 20, []),
-        getRowKey: useCallback((index) => gridItems[index]!.id, [gridItems]),
+    const {
+        virtualRows,
+        virtualColumns,
+        totalRowsHeight,
+        totalColumnsWidth,
+        computeRow,
+        isScrolling
+    } = useHorisontalScroll({
         rowsCount: gridSize,
-        getScrollElement: useCallback(() => scrollElementRef.current, [])
+        estimateRowHeight: useCallback(() => 30, []),
+        getRowKey: useCallback((index) => gridItems[index]!.id, [gridItems]),
+
+        columnsCount: gridSize + 1,
+        columnsWidth: useCallback(() => 200, []),
+        getColumnKey: useCallback((index) => index, []),
+
+        getScrollElement: useCallback(() => scrollElementRef.current,[])
     })
 
     const reverseGrid = () => {
@@ -63,7 +75,7 @@ const TestHorizontalScroll = () => {
                     border: '2px solid green',
                     position: 'relative'
                 }}>
-                <div style={{height: totalHeight}}>
+                <div style={{height: totalRowsHeight}}>
                     {virtualRows.map((virtualRow) => {
                         const item = gridItems[virtualRow.index]!;
                         return (
@@ -76,19 +88,23 @@ const TestHorizontalScroll = () => {
                                     padding: '6px 12px',
                                     position: 'absolute',
                                     top: 0,
-                                    display: 'flex'
+                                    display: 'flex',
                                 }}
                             >
-                                {virtualRow.index}
-                                {item.columns.map(column => (
-                                    <div
-                                        key={column.id}
-                                        style={{
-                                            width: 200
-                                        }}>
-                                        {column.text}
-                                    </div>
-                                ))}
+                                {virtualColumns.map((virtualColumn) => {
+                                    const item = gridItems[virtualRow.index]?.columns[virtualColumn.key];
+                                    return (
+                                        <div
+                                            key={virtualColumn.key}
+                                            style={{
+                                                width: virtualColumn.width,
+                                                border: '1px solid lightgray'
+                                        }}
+                                        >
+                                            {item.text}
+                                        </div>
+                                    )
+                                })}
                             </div>
                         )
                     })}

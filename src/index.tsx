@@ -9,7 +9,7 @@ if (!root) {
     throw new Error(('root was not found in document'))
 }
 root.render(
-    <TestHorizontalScroll/>
+  <TestHorizontalScroll/>
 );
 
 // If you want to start measuring performance in your app, pass a function

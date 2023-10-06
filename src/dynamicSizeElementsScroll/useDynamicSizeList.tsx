@@ -11,7 +11,7 @@ interface useDynamicSizeListProps {
     itemHeight?: (index: number) => number;
     estimateItemHeight?: (index: number) => number;
     getItemKey: (index: number) => Key;
-    overscan?: number;
+    overscanX?: number;
     scrollingDelay?: number;
     getScrollElement: () => HTMLElement | null;
 }
@@ -50,7 +50,7 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
         itemHeight,
         estimateItemHeight,
         getItemKey,
-        overscan=defaultOverscan,
+        overscanX=defaultOverscan,
         scrollingDelay=defaultScrollingDelay,
         getScrollElement
     } = props;
@@ -163,10 +163,10 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
             allItems[index] = item;
 
             if (startIndex === -1 && item.height + item.offsetTop > rangeStart) {
-                startIndex = Math.max(0, index - overscan);
+                startIndex = Math.max(0, index - overscanX);
             }
             if (endIndex === -1 && item.height + item.offsetTop >= rangeEnd) {
-                endIndex = Math.min(itemsCount - 1, index + overscan);
+                endIndex = Math.min(itemsCount - 1, index + overscanX);
             }
         }
         const virtualItems = allItems.slice(startIndex, endIndex + 1);
@@ -177,7 +177,7 @@ export function useDynamicSizeList(props: useDynamicSizeListProps) {
             totalHeight,
             allItems
         }
-    }, [scrollTop, viewportHeight, itemsCount, overscan, itemHeight, estimateItemHeight, getItemKey, computedItemsCache]);
+    }, [scrollTop, viewportHeight, itemsCount, overscanX, itemHeight, estimateItemHeight, getItemKey, computedItemsCache]);
 
 
     const theLatestData = useLatest({computedItemsCache, getItemKey, getScrollElement, scrollTop});
