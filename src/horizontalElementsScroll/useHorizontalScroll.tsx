@@ -7,16 +7,14 @@ import {
 type Key = string | number;
 
 interface useDynamicSizeGridProps {
-    // ROWS
     rowsCount: number;
     rowHeight?: (index: number) => number;
     estimateRowHeight?: (index: number) => number;
     getRowKey: (index: number) => Key;
-    // COLUMNS
     columnsCount: number;
-    columnsWidth: (index: number) => number;
+    columnsWidth?: (index: number) => number;
+    estimateColumnWidth?: (index: number) => number;
     getColumnKey: (index) => Key;
-
     overscanX?: number;
     overscanY?: number;
     scrollingDelay?: number;
@@ -42,11 +40,21 @@ const defaultOverscanY = 1;
 const defaultScrollingDelay = 100;
 
 function validateProps(props: useDynamicSizeGridProps) {
-    const {rowHeight, estimateRowHeight} = props;
+    const {rowHeight, estimateRowHeight, columnsWidth, estimateColumnWidth} = props;
     if (!rowHeight && !estimateRowHeight) {
         throw new Error(
             `you must pass either rowHeight ${rowHeight} or estimateRowHeight ${estimateRowHeight} prop`
-        )
+        );
+    }
+    if (!columnsWidth && !estimateColumnWidth) {
+        throw new Error(
+            `you must pass either columnsWidth ${columnsWidth} or estimateColumnWidth ${estimateColumnWidth} prop`
+        );
+    }
+    if (!rowHeight && !columnsWidth) {
+        throw new Error(
+            `you must pass either rowHeight ${rowHeight} or columnsWidth ${columnsWidth} prop`
+        );
     }
 }
 
@@ -67,6 +75,7 @@ export function useHorisontalScroll(props: useDynamicSizeGridProps) {
        getRowKey,
        columnsCount,
        columnsWidth,
+       estimateColumnWidth,
        getColumnKey,
        overscanX=defaultOverscanX,
        overscanY=defaultOverscanY,
@@ -75,12 +84,46 @@ export function useHorisontalScroll(props: useDynamicSizeGridProps) {
     } = props;
 
     const [scrollTop, setScrollTop] = useState(0);
-    const [computedRowSizeCache, setComputedRowSizeCache] = useState<Record<Key, number>>({});
     const [scrollLeft, setScrollLeft] = useState(0);
+
+    const [computedRowSizeCache, setComputedRowSizeCache] = useState<Record<Key, number>>({});
+    const [computedColumnSizeCache, setComputedColumnSizeCache] = useState<Record<string, number>>({});
+
     const [gridHeight, setGridHeight] = useState(0);
     const [gridWidth, setGridWidth] = useState(0);
+
     const [isScrolling, setIsScrolling] = useState(false);
 
+    const computedColumnWidths = useMemo(() => {
+        if (columnsWidth) {
+            return Array.from({length: columnsCount}, (_, index) => {
+                columnsWidth(index);
+            });
+        }
+        const allColumnWidths: number[] = Array(columnsCount);
+
+        for (let columnIndex = 0; columnIndex < columnsCount; columnIndex++) {
+            let calculatedMaxColumnWidth: number | undefined = undefined;
+
+            for (let rowIndex = 0; rowIndex < rowsCount; rowIndex++) {
+                const key = `${getRowKey(rowIndex)}-${getColumnKey(columnIndex)}`;
+                const columnSize = computedColumnSizeCache[key];
+
+                if (isNumber(columnSize)) {
+                    calculatedMaxColumnWidth = isNumber(calculatedMaxColumnWidth)
+                    ? Math.max(calculatedMaxColumnWidth, columnSize)
+                    : columnSize;
+                }
+
+                if (isNumber(calculatedMaxColumnWidth)) {
+                    allColumnWidths[columnIndex] = calculatedMaxColumnWidth;
+                } else {
+                    allColumnWidths[columnIndex] = estimateColumnWidth(columnIndex) ?? 0;
+                }
+            }
+        }
+        return allColumnWidths;
+    }, [columnsCount, columnsWidth, rowsCount, columnsWidth, getRowKey, getColumnKey, estimateColumnWidth])
 
     useLayoutEffect(() => {
         const scrollElement = getScrollElement();
@@ -224,10 +267,10 @@ export function useHorisontalScroll(props: useDynamicSizeGridProps) {
 
             for (let index = 0; index < columnsCount; index++) {
                 const key = getColumnKey(index);
-                const column: dynamicSizeGridColumn = {
+                const column = {
                     key,
                     index,
-                    width: columnsWidth(index),
+                    width: computedColumnWidths(index)!,
                     offsetLeft: totalColumnsWidth
                 }
 
@@ -346,6 +389,8 @@ export function useHorisontalScroll(props: useDynamicSizeGridProps) {
         startColumnIndex,
         endColumnIndex,
         totalColumnsWidth,
-        allColumns
+        allColumns,
+
+
     }
 }
