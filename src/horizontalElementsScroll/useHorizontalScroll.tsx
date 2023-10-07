@@ -98,32 +98,33 @@ export function useHorisontalScroll(props: useDynamicSizeGridProps) {
         if (columnsWidth) {
             return Array.from({length: columnsCount}, (_, index) => {
                 columnsWidth(index);
-            });
+            })
         }
+
         const allColumnWidths: number[] = Array(columnsCount);
 
         for (let columnIndex = 0; columnIndex < columnsCount; columnIndex++) {
-            let calculatedMaxColumnWidth: number | undefined = undefined;
+         let computedMaxColumnWidths: number | undefined = undefined;
 
-            for (let rowIndex = 0; rowIndex < rowsCount; rowIndex++) {
-                const key = `${getRowKey(rowIndex)}-${getColumnKey(columnIndex)}`;
-                const columnSize = computedColumnSizeCache[key];
+         for (let rowIndex = 0; rowIndex < rowsCount; rowIndex++) {
+             const key = `${getRowKey(rowIndex)}-${getColumnKey(columnIndex)}`
+             const columnSize = computedColumnSizeCache[key];
 
-                if (isNumber(columnSize)) {
-                    calculatedMaxColumnWidth = isNumber(calculatedMaxColumnWidth)
-                    ? Math.max(calculatedMaxColumnWidth, columnSize)
-                    : columnSize;
-                }
-
-                if (isNumber(calculatedMaxColumnWidth)) {
-                    allColumnWidths[columnIndex] = calculatedMaxColumnWidth;
-                } else {
-                    allColumnWidths[columnIndex] = estimateColumnWidth(columnIndex) ?? 0;
-                }
+             if (typeof columnSize === 'number') {
+                 computedMaxColumnWidths = typeof computedMaxColumnWidths === 'number'
+                 ? Math.max(columnSize, computedMaxColumnWidths)
+                 : columnSize;
+             }
+         }
+            if (typeof computedMaxColumnWidths === 'number') {
+                allColumnWidths[columnIndex] = computedMaxColumnWidths;
+            } else {
+                allColumnWidths[columnIndex] = estimateColumnWidth(columnIndex) ?? 0;
             }
         }
         return allColumnWidths;
-    }, [columnsCount, columnsWidth, rowsCount, columnsWidth, getRowKey, getColumnKey, estimateColumnWidth])
+    }, [columnsCount, rowsCount, columnsWidth, getColumnKey, getRowKey, estimateColumnWidth, computedColumnSizeCache ])
+
 
     useLayoutEffect(() => {
         const scrollElement = getScrollElement();
@@ -267,10 +268,10 @@ export function useHorisontalScroll(props: useDynamicSizeGridProps) {
 
             for (let index = 0; index < columnsCount; index++) {
                 const key = getColumnKey(index);
-                const column = {
+                const column: dynamicSizeGridColumn = {
                     key,
                     index,
-                    width: computedColumnWidths(index)!,
+                    width: computedColumnWidths[index],
                     offsetLeft: totalColumnsWidth
                 }
 
@@ -293,9 +294,9 @@ export function useHorisontalScroll(props: useDynamicSizeGridProps) {
                 startColumnIndex,
                 endColumnIndex,
                 totalColumnsWidth,
-                allColumns
+                allColumns,
             }
-        }, [scrollLeft, gridWidth, columnsCount, overscanX, columnsWidth, getColumnKey]);
+        }, [scrollLeft, gridWidth, columnsCount, overscanX, columnsWidth, getColumnKey, computedColumnWidths]);
 
 
     const theLatestData = useLatest({computedRowSizeCache, getRowKey, getScrollElement, scrollTop});
@@ -390,7 +391,5 @@ export function useHorisontalScroll(props: useDynamicSizeGridProps) {
         endColumnIndex,
         totalColumnsWidth,
         allColumns,
-
-
     }
 }
