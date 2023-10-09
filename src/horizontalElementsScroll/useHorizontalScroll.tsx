@@ -4,6 +4,8 @@ import {
     useMemo, useRef, useState
 } from "react";
 
+import {isNumber} from "../utils/utils";
+
 type Key = string | number;
 
 interface useDynamicSizeGridProps {
@@ -95,6 +97,7 @@ export function useHorisontalScroll(props: useDynamicSizeGridProps) {
     const [isScrolling, setIsScrolling] = useState(false);
 
     const computedColumnWidths = useMemo(() => {
+
         if (columnsWidth) {
             return Array.from({length: columnsCount}, (_, index) => {
                 columnsWidth(index);
@@ -107,23 +110,33 @@ export function useHorisontalScroll(props: useDynamicSizeGridProps) {
          let computedMaxColumnWidths: number | undefined = undefined;
 
          for (let rowIndex = 0; rowIndex < rowsCount; rowIndex++) {
-             const key = `${getRowKey(rowIndex)}-${getColumnKey(columnIndex)}`
+             const key = `${getRowKey(rowIndex)}-${getColumnKey(columnIndex)}`;
              const columnSize = computedColumnSizeCache[key];
 
-             if (typeof columnSize === 'number') {
-                 computedMaxColumnWidths = typeof computedMaxColumnWidths === 'number'
-                 ? Math.max(columnSize, computedMaxColumnWidths)
+             if (isNumber(columnSize)) {
+                 computedMaxColumnWidths = isNumber(computedMaxColumnWidths)
+                 ? Math.max(computedMaxColumnWidths, columnSize)
                  : columnSize;
              }
          }
-            if (typeof computedMaxColumnWidths === 'number') {
+            if (isNumber(computedMaxColumnWidths)) {
                 allColumnWidths[columnIndex] = computedMaxColumnWidths;
             } else {
-                allColumnWidths[columnIndex] = estimateColumnWidth(columnIndex) ?? 0;
+                allColumnWidths[columnIndex] = estimateColumnWidth?.(columnIndex) ?? 0;
             }
         }
+
         return allColumnWidths;
-    }, [columnsCount, rowsCount, columnsWidth, getColumnKey, getRowKey, estimateColumnWidth, computedColumnSizeCache ])
+
+    }, [
+        columnsCount,
+        rowsCount,
+        computedColumnSizeCache,
+        columnsWidth,
+        getColumnKey,
+        getRowKey,
+        estimateColumnWidth
+    ]);
 
 
     useLayoutEffect(() => {
@@ -271,7 +284,7 @@ export function useHorisontalScroll(props: useDynamicSizeGridProps) {
                 const column: dynamicSizeGridColumn = {
                     key,
                     index,
-                    width: computedColumnWidths[index],
+                    width: columnsWidth(index),
                     offsetLeft: totalColumnsWidth
                 }
 
@@ -281,7 +294,7 @@ export function useHorisontalScroll(props: useDynamicSizeGridProps) {
                 if ((column.width + column.offsetLeft) < rangeColumnStart) {
                     startColumnIndex++;
                 }
-                if ((column.width + column.offsetLeft) < rangeColumnEnd) {
+                if ((column.width + column.offsetLeft) <= rangeColumnEnd) {
                    endColumnIndex++;
                 }
             }
@@ -289,17 +302,28 @@ export function useHorisontalScroll(props: useDynamicSizeGridProps) {
             endColumnIndex = Math.min(columnsCount - 1, endColumnIndex + overscanX);
 
             const virtualColumns = allColumns.slice(startColumnIndex, endColumnIndex + 1);
+
             return {
                 virtualColumns,
                 startColumnIndex,
                 endColumnIndex,
                 totalColumnsWidth,
-                allColumns,
+                allColumns
             }
-        }, [scrollLeft, gridWidth, columnsCount, overscanX, columnsWidth, getColumnKey, computedColumnWidths]);
+        }, [scrollLeft, gridWidth, columnsCount, overscanX, getColumnKey, computedColumnWidths]);
 
 
-    const theLatestData = useLatest({computedRowSizeCache, getRowKey, getScrollElement, scrollTop});
+    const theLatestData = useLatest({
+        computedRowSizeCache,
+        getRowKey,
+        scrollTop,
+        allRows,
+        computedColumnSizeCache,
+        allColumns,
+        scrollLeft,
+        getColumnKey,
+        getScrollElement
+    });
 
     const computeRowHeight = useCallback((
         item: Element | null,
@@ -374,7 +398,79 @@ export function useHorisontalScroll(props: useDynamicSizeGridProps) {
 
     const computeRow = useCallback((item: Element | null) => {
         computeRowHeight(item, itemsResizeObserver);
-    }, [itemsResizeObserver])
+    }, [itemsResizeObserver]);
+
+
+    const computeColumnWidth = useCallback((
+        item: Element | null,
+        resizeObserver: ResizeObserver,
+        entry?: ResizeObserverEntry
+    ) => {
+        if (!item) {
+            return;
+        }
+
+        if (!item.isConnected) {
+            resizeObserver.unobserve(item);
+            return;
+        }
+
+        const dataRowIndex = item.getAttribute('data-row-index') || '';
+        const rowIndex = parseInt(dataRowIndex, 10);
+
+        const dataColumnIndex = item.getAttribute('data-column-index') || '';
+        const columnIndex = parseInt(dataColumnIndex, 10);
+
+        if (Number.isNaN(rowIndex) || Number.isNaN(columnIndex)) {
+            console.error('virtual items must have a correct `data-row-index` and `data-column-index` attribute');
+            return;
+        }
+
+        const {computedColumnSizeCache, getRowKey, getColumnKey } = theLatestData.current;
+
+        const key = `${getRowKey(rowIndex)}-${getColumnKey(columnIndex)}`;
+        const isResize = Boolean(entry);
+        resizeObserver.observe(item);
+
+        if (!isResize && typeof computedColumnSizeCache[key] === 'number') {
+            return;
+        }
+
+        const itemWidth = entry.borderBoxSize[0].inlineSize ??
+            item.getBoundingClientRect().width;
+
+        if (computedColumnSizeCache[key] === itemWidth) {
+            return;
+        }
+
+        setComputedColumnSizeCache((cache) => ({...cache, itemWidth}));
+
+
+        const element = allColumns[columnIndex];
+        const scrollLeftGap = itemWidth - element.width;
+        if (scrollLeftGap !== 0 && (scrollLeft - element.offsetLeft < 0)) {
+            const scrollElement = getScrollElement();
+            if (scrollElement) {
+                scrollElement.scrollBy(scrollLeftGap, 0)
+            }
+        }
+
+    }, [theLatestData]);
+
+    const columnWidthResizeObserver = useMemo(() => {
+        const resizeObserver = new ResizeObserver((entries) => {
+            entries.forEach(entry => {
+                const item = entry.target;
+
+                computeColumnWidth(item, resizeObserver, entry);
+            })
+        })
+        return resizeObserver;
+    }, [theLatestData]);
+
+    const computeColumn = useCallback((item: Element | null) => {
+        computeColumnWidth(item, columnWidthResizeObserver);
+    }, [columnWidthResizeObserver]);
 
 
     return {
@@ -391,5 +487,7 @@ export function useHorisontalScroll(props: useDynamicSizeGridProps) {
         endColumnIndex,
         totalColumnsWidth,
         allColumns,
+
+        computeColumn
     }
 }

@@ -35,11 +35,11 @@ const TestHorizontalScroll = () => {
         isScrolling
     } = useHorisontalScroll({
         rowsCount: gridSize,
-        estimateRowHeight: useCallback(() => 30, []),
+        // estimateRowHeight: useCallback(() => 30, []),
         getRowKey: useCallback((index) => gridItems[index]!.id, [gridItems]),
 
         columnsCount: gridSize + 1,
-        columnsWidth: useCallback(() => 200, []),
+        columnsWidth: useCallback(() => 20, []),
         getColumnKey: useCallback((index) => index, []),
 
         getScrollElement: useCallback(() => scrollElementRef.current,[])
