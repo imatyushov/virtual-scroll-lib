@@ -85,11 +85,11 @@ const TestHorizontalScroll = () => {
                                     padding: '6px 12px',
                                     position: 'absolute',
                                     top: 0,
-                                    display: 'flex',
+                                    // display: 'flex',
                                     height: virtualRow.height
                                 }}
                             >
-                                {virtualColumns.map((virtualColumn, index) => {
+                                {virtualColumns.map((virtualColumn) => {
                                     const item = gridItems[virtualRow.index]?.columns[virtualColumn.index];
                                     return (
                                         <div
@@ -98,12 +98,15 @@ const TestHorizontalScroll = () => {
                                             ref={computeColumn}
                                             key={virtualColumn.key}
                                             style={{
-                                                width: virtualColumn.width,
-                                                marginLeft: index === 0 ? virtualColumn.offsetLeft : 0,
+                                                position: 'absolute',
+                                                left: virtualColumn.offsetLeft,
+                                                whiteSpace: 'nowrap',
                                                 border: '1px solid lightgray'
-                                        }}
+                                                // width: virtualColumn.width,
+                                                // marginLeft: index === 0 ? virtualColumn.offsetLeft : 0,
+                                                }}
                                         >
-                                            {item.text}
+                                            {item?.text}
                                         </div>
                                     )
                                 })}
