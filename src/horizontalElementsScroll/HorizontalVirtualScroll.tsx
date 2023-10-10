@@ -30,8 +30,7 @@ const TestHorizontalScroll = () => {
         virtualRows,
         virtualColumns,
         totalRowsHeight,
-        totalColumnsWidth,
-        isScrolling, computeColumn
+        isScrolling, computeRow, computeColumn
     } = useHorisontalScroll({
         rowsCount: gridSize,
         rowHeight: useCallback(() => 30, []),

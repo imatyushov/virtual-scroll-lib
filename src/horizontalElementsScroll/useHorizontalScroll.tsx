@@ -4,7 +4,7 @@ import {
     useMemo, useRef, useState
 } from "react";
 
-import {isNumber} from "../utils/utils";
+import {isNumber, useResizeObserver} from "../utils/utils";
 
 type Key = string | number;
 
@@ -384,16 +384,12 @@ export function useHorisontalScroll(props: useDynamicSizeGridProps) {
             setComputedRowSizeCache((cache) => ({...cache, [key]: itemHeight}));
         }, [theLatestData])
 
-    const itemsResizeObserver = useMemo(() => {
-        const resizeObserver = new ResizeObserver((entries) => {
-                entries.forEach(entry => {
-                    const item = entry.target;
-
-                    computeRowHeight(item, resizeObserver, entry);
-                })
-            })
-        return resizeObserver;
-        }, [theLatestData]);
+    const itemsResizeObserver = useResizeObserver((entries, observer) => {
+        entries.forEach((entry) => {
+            const item = entry.target;
+            computeRowHeight(item, observer, entry);
+        })
+    })
 
     const computeRow = useCallback((item: Element | null) => {
         computeRowHeight(item, itemsResizeObserver);
@@ -459,15 +455,12 @@ export function useHorisontalScroll(props: useDynamicSizeGridProps) {
         }
     }, [theLatestData]);
 
-    const columnWidthResizeObserver = useMemo(() => {
-        const resizeObserver = new ResizeObserver((entries) => {
-            entries.forEach((entry) => {
-                const item = entry.target;
-                computeColumnWidth(item, resizeObserver, entry);
-            })
+    const columnWidthResizeObserver = useResizeObserver((entries, observer) => {
+        entries.forEach((entry) => {
+            const item = entry.target;
+            computeColumnWidth(item, observer, entry);
         })
-        return resizeObserver;
-    }, [theLatestData]);
+    })
 
     const computeColumn = useCallback((item: Element | null) => {
         computeColumnWidth(item, columnWidthResizeObserver);
