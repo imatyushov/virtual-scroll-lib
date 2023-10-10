@@ -31,17 +31,14 @@ const TestHorizontalScroll = () => {
         virtualColumns,
         totalRowsHeight,
         totalColumnsWidth,
-        computeRow,
-        isScrolling
+        isScrolling, computeColumn
     } = useHorisontalScroll({
         rowsCount: gridSize,
-        // estimateRowHeight: useCallback(() => 30, []),
+        rowHeight: useCallback(() => 30, []),
         getRowKey: useCallback((index) => gridItems[index]!.id, [gridItems]),
-
         columnsCount: gridSize + 1,
-        columnsWidth: useCallback(() => 20, []),
+        estimateColumnWidth: useCallback(() => 100, []),
         getColumnKey: useCallback((index) => index, []),
-
         getScrollElement: useCallback(() => scrollElementRef.current,[])
     })
 
@@ -80,8 +77,8 @@ const TestHorizontalScroll = () => {
                         const item = gridItems[virtualRow.index]!;
                         return (
                             <div
-                                ref={computeRow}
-                                data-row-index={virtualRow.index}
+                                // ref={computeRow}
+                                // data-row-index={virtualRow.index}
                                 key={item.id}
                                 style={{
                                     transform: `translateY(${virtualRow.offsetTop}px)`,
@@ -89,12 +86,16 @@ const TestHorizontalScroll = () => {
                                     position: 'absolute',
                                     top: 0,
                                     display: 'flex',
+                                    height: virtualRow.height
                                 }}
                             >
                                 {virtualColumns.map((virtualColumn, index) => {
                                     const item = gridItems[virtualRow.index]?.columns[virtualColumn.index];
                                     return (
                                         <div
+                                            data-row-index={virtualRow.index}
+                                            data-column-index={virtualColumn.index}
+                                            ref={computeColumn}
                                             key={virtualColumn.key}
                                             style={{
                                                 width: virtualColumn.width,
