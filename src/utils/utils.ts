@@ -21,6 +21,7 @@ export function useResizeObserver(callback: ResizeObserverCallback) {
                 theLatestCallback.current(entries, observer);
             }), []);
 
+    //CleanUp fn:
     useEffect(() => {
         resizeObserver.disconnect();
     }, [])
